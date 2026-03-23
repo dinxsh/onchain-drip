@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(./node_modules/.bin/tailwindcss init:*)",
+      "Bash(ls /c/Users/hp/Desktop/code/startups/covalenthq/products/onchain-drip/node_modules/.bin/tailwind*)"
+    ]
+  }
+}

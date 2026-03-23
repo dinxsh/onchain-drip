@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Fonts ──────────────────────────────────────────────────── */
+.font-pixel { font-family: 'Press Start 2P', monospace; }
+.font-data  { font-family: 'Share Tech Mono', monospace; }
+
+/* ─── Base reset ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ─── Page background: dark grid ─────────────────────────────── */
+.bg-grid {
+  background-color: #080808;
+  background-image:
+    linear-gradient(rgba(255,76,139,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,76,139,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ─── Pixel card (hard edges) ────────────────────────────────── */
+.px-card {
+  background: #0D0D0D;
+  border: 1px solid #1C1C1C;
+  border-radius: 0;
+}
+.px-card-bright {
+  background: #0D0D0D;
+  border: 1px solid #2A2A2A;
+  border-radius: 0;
+}
+
+/* ─── Scanlines (character stage only) ──────────────────────── */
+.scanlines { position: relative; }
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.10) 3px,
+    rgba(0,0,0,0.10) 4px
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ─── Float animation (character) ───────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+.float { animation: float 3.5s ease-in-out infinite; }
+
+/* ─── Score count-up flash ───────────────────────────────────── */
+@keyframes score-flash {
+  0%   { opacity: 1; transform: scale(1); }
+  40%  { opacity: 0.6; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.score-flash { animation: score-flash 0.35s ease-out; }
+
+/* ─── Progress bar shine ─────────────────────────────────────── */
+@keyframes bar-shine {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+.progress-shine {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: bar-shine 1.8s linear infinite;
+}
+
+/* ─── Skeleton shimmer ───────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400% 0; }
+  100% { background-position:  400% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #0D0D0D 0%, #1A1A1A 40%, #FF4C8B08 50%, #1A1A1A 60%, #0D0D0D 100%);
+  background-size: 400% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ─── Subtle brand pulse on input focus ─────────────────────── */
+@keyframes brand-glow {
+  0%, 100% { box-shadow: 0 0 0 1px #FF4C8B40; }
+  50%       { box-shadow: 0 0 0 2px #FF4C8B60, 0 0 12px #FF4C8B20; }
+}
+.input-focused { animation: brand-glow 2s ease-in-out infinite; }
+
+/* ─── Leaderboard hover ──────────────────────────────────────── */
+.lb-row { transition: background 0.15s; }
+.lb-row:hover { background: #141414 !important; }
+
+/* ─── Utility: pixel border accent colors ───────────────────── */
+.border-brand  { border-color: #FF4C8B; }
+.border-cyan   { border-color: #00D4FF; }
+.border-green  { border-color: #00E87A; }
+.border-amber  { border-color: #FF8C00; }
+.border-gold   { border-color: #FFB800; }
+
+/* ─── Tier text colors ───────────────────────────────────────── */
+.text-tier-rugged  { color: #6B7280; }
+.text-tier-normie  { color: #00D4FF; }
+.text-tier-holder  { color: #00E87A; }
+.text-tier-degen   { color: #FF8C00; }
+.text-tier-whale   { color: #FFB800; }
+
+/* ─── Button press ───────────────────────────────────────────── */
+.btn-press { transition: transform 0.08s, opacity 0.08s; }
+.btn-press:active { transform: translateY(1px); opacity: 0.85; }
+
+/* ─── Pixel tag (no radius) ──────────────────────────────────── */
+.px-tag {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border: 1px solid;
+  border-radius: 0;
+  line-height: 1;
+}
