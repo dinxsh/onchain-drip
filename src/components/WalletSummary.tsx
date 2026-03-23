@@ -359,7 +359,10 @@ export function generateRoast(
   };
 }
 
-// ─── Tweet builder — viral X loop for GoldRush ──────────────────
+// ─── Viral tweet algo ────────────────────────────────────────────
+// Selects format based on wallet fingerprint.
+// Every format: hook → receipt data → punchline → CTA.
+// Goal: embarrass / flex enough that people quote-tweet with their own score.
 
 export function buildTweetText(
   address: string,
@@ -369,46 +372,260 @@ export function buildTweetText(
   nftCount: number,
   txnCount: number,
   chainCount: number,
-  activeChains: string[]
+  _activeChains: string[],
+  gasSpentUSD = 0,
+  walletAgeDays = 365,
+  hasMemecoin = false,
+  portfolioDelta7d = 0,
 ): string {
-  const roastCtx: RoastContext = {
-    address,
-    portfolioUSD,
-    portfolioDelta7d: 0,
-    nftCount,
-    chainCount,
-    activeChains,
-    txnCount,
-    walletAgeDays: 365,
-    unlimitedApprovals: 0,
-    highRiskApprovals: 0,
-    topTokenSymbols: [],
-    hasMemecoin: false,
-    largestTxnUSD: 0,
-    gasSpentUSD: 0,
-    dripScore: score,
-    tier,
-    securityScore: 80,
-  };
-  const roast = generateRoastFromEngine(roastCtx);
-  const labels   = getActivityLabels(portfolioUSD, nftCount, txnCount, chainCount, score);
-  const labelStr = labels.slice(0, 3).map(l => l.text).join(' / ');
+  const usd       = formatUSD(portfolioUSD);
+  const gas       = formatUSD(gasSpentUSD);
+  const txns      = txnCount.toLocaleString();
   const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const tierUp    = tier.toUpperCase();
+  const url       = `roastwallet.vercel.app/?address=${address}`;
+  const label     = getActivityLabels(portfolioUSD, nftCount, txnCount, chainCount, score)
+                      .slice(0, 2).map(l => l.text).join(' + ');
 
+  // ── Format 1: Gas receipt (spent a lot on gas relative to balance) ──
+  if (gasSpentUSD > 0 && gasSpentUSD > portfolioUSD * 0.5) {
+    return [
+      `spent ${gas} in gas fees`,
+      `portfolio is now ${usd}`,
+      ``,
+      `the validators ate well`,
+      `i did not`,
+      ``,
+      `drip score: ${score}/100 (${tierUp})`,
+      `${txns} txns · ${chainCount} chains · ${shortAddr}`,
+      ``,
+      `roast yours → ${url}`,
+      `powered by goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 2: Ghost wallet (zero or near-zero txns, multiple chains) ──
+  if (txnCount === 0 && chainCount >= 2) {
+    return [
+      `deployed on ${chainCount} chains`,
+      `made 0 transactions`,
+      ``,
+      `the blockchain has my address`,
+      `no idea what i was planning`,
+      ``,
+      `drip score: ${score}/100 (RUGGED)`,
+      `${shortAddr}`,
+      ``,
+      `what does YOUR wallet say → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 3: The ratio (many txns, still broke) ──
+  if (txnCount > 300 && portfolioUSD < 500) {
+    return [
+      `${txns} on-chain transactions`,
+      `${usd} to show for it`,
+      ``,
+      `the ratio is not in my favour`,
+      ``,
+      `${chainCount} chain${chainCount !== 1 ? 's' : ''} · ${nftCount > 0 ? `${nftCount} NFTs · ` : ''}${tierUp}`,
+      `drip score: ${score}/100`,
+      ``,
+      `if yours is worse, i want to see it → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 4: JPEG cemetery (heavy NFTs, low liquid) ──
+  if (nftCount > 15 && portfolioUSD < 1000) {
+    return [
+      `${nftCount} NFTs`,
+      `${usd} liquid`,
+      ``,
+      `the floor dropped`,
+      `the NFTs stayed`,
+      `the money did not`,
+      ``,
+      `drip score: ${score}/100 · ${tierUp} · ${shortAddr}`,
+      ``,
+      `get your wallet buried → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 5: Multichain tourist (5+ chains, minimal substance) ──
+  if (chainCount >= 5 && txnCount < 50) {
+    return [
+      `active on ${chainCount} chains`,
+      `${txns} total transactions`,
+      ``,
+      `i have been everywhere`,
+      `done basically nothing`,
+      ``,
+      `${usd} · ${tierUp} · ${shortAddr}`,
+      `drip score: ${score}/100`,
+      ``,
+      `roast your multichain footprint → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 6: Down bad (negative portfolio delta) ──
+  if (portfolioDelta7d < -15 && portfolioUSD > 100) {
+    const pct = Math.abs(portfolioDelta7d).toFixed(1);
+    return [
+      `down ${pct}% this week`,
+      `portfolio: ${usd}`,
+      `conviction: unchanged`,
+      ``,
+      `${txns} txns · ${chainCount} chains · ${score}/100`,
+      `${tierUp} · ${shortAddr}`,
+      ``,
+      `if you're also suffering → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 7: Memecoin confession ──
+  if (hasMemecoin) {
+    return [
+      `my wallet has memecoins`,
+      `the data is public`,
+      `i have no regrets`,
+      ``,
+      `${usd} · ${txns} txns · ${chainCount} chains`,
+      `drip score: ${score}/100 (${tierUp})`,
+      `${shortAddr}`,
+      ``,
+      `confess yours → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 8: The vault / silent accumulator (whale, low activity) ──
+  if (portfolioUSD > 50_000 && txnCount < 25) {
+    return [
+      `${usd} on-chain`,
+      `${txns} transactions`,
+      ``,
+      `i do not explain my portfolio`,
+      ``,
+      `${chainCount} chain${chainCount !== 1 ? 's' : ''} · ${score}/100 · ${tierUp}`,
+      `${shortAddr}`,
+      ``,
+      `check if you can compete → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 9: Old wallet, low score (wallet age but not much else) ──
+  if (walletAgeDays > 900 && score < 35) {
+    const years = (walletAgeDays / 365).toFixed(1);
+    return [
+      `wallet age: ${years} years`,
+      `drip score: ${score}/100`,
+      ``,
+      `been here since ${Math.floor(new Date().getFullYear() - Number(years))}`,
+      `have very little to show for it`,
+      ``,
+      `${usd} · ${txns} txns · ${tierUp}`,
+      `${shortAddr}`,
+      ``,
+      `prove you're doing better → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 10: Degen flex (high activity, decent portfolio) ──
+  if (txnCount > 500 && portfolioUSD > 5000) {
+    return [
+      `${txns} on-chain transactions`,
+      `${usd} still standing`,
+      ``,
+      `statistically should not have survived`,
+      ``,
+      `${chainCount} chains · ${nftCount} NFTs · ${label}`,
+      `drip score: ${score}/100 (${tierUp})`,
+      `${shortAddr}`,
+      ``,
+      `beat my score → ${url}`,
+      `goldrush.dev`,
+    ].join('\n');
+  }
+
+  // ── Format 11: Default — clean stats card ────────────────────────
   return [
-    `i let an AI roast my on-chain history`,
+    `just roasted my on-chain history`,
     ``,
-    `verdict: "${roast.headline}"`,
-    `"${roast.verdict}"`,
-    ``,
-    `score: ${score}/100 — ${tier.toUpperCase()}`,
-    `${formatUSD(portfolioUSD)} | ${txnCount.toLocaleString()} txns | ${chainCount} chain${chainCount !== 1 ? 's' : ''} | ${nftCount} NFTs`,
+    `${usd} · ${txns} txns · ${chainCount} chains · ${nftCount} NFTs`,
+    `drip score: ${score}/100 — ${tierUp}`,
     `${shortAddr}`,
     ``,
-    `labels: ${labelStr}`,
+    label ? `[${label}]` : '',
     ``,
-    `get yours roasted — powered by goldrush.dev`,
-  ].join('\n');
+    `what does YOUR wallet score → ${url}`,
+    `goldrush.dev`,
+  ].filter(l => l !== undefined).join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+// ── Challenge tweet — "can you beat me?" format ──────────────────
+export function buildChallengeTweet(
+  address: string,
+  score: number,
+  tier: Tier,
+  portfolioUSD: number,
+  txnCount: number,
+  chainCount: number,
+  personalityLabel: string,
+): string {
+  const usd    = formatUSD(portfolioUSD);
+  const tierUp = tier.toUpperCase();
+  const url    = `roastwallet.vercel.app/?address=${address}`;
+
+  // Pick hook based on score band
+  const hooks: Record<string, string[]> = {
+    whale:  [
+      `my drip score is ${score}/100`,
+      `i am a ${personalityLabel}`,
+      ``,
+      `${usd} · ${txnCount.toLocaleString()} txns · ${chainCount} chains`,
+      `tier: ${tierUp}`,
+      ``,
+      `doubt you can beat this → ${url}`,
+      `goldrush.dev`,
+    ],
+    degen:  [
+      `scored ${score}/100 on my wallet`,
+      `personality type: ${personalityLabel}`,
+      ``,
+      `${usd} · ${tierUp} · ${chainCount} chains`,
+      ``,
+      `your wallet is probably mid → ${url}`,
+      `goldrush.dev`,
+    ],
+    holder: [
+      `drip score: ${score}/100 (${tierUp})`,
+      `i'm a ${personalityLabel}`,
+      ``,
+      `${usd} · ${txnCount.toLocaleString()} txns`,
+      ``,
+      `can you beat ${score}? → ${url}`,
+      `goldrush.dev`,
+    ],
+    default: [
+      `got roasted by my own on-chain data`,
+      ``,
+      `score: ${score}/100 — ${tierUp}`,
+      `personality: ${personalityLabel}`,
+      ``,
+      `find out what yours says → ${url}`,
+      `goldrush.dev`,
+    ],
+  };
+
+  const lines = hooks[tier] ?? hooks.default;
+  return lines.join('\n');
 }
 
 // ─── Component ──────────────────────────────────────────────────

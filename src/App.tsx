@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AddressInput } from './components/AddressInput';
 import { CharacterStage } from './components/CharacterStage';
 import { TraitPanel } from './components/TraitPanel';
-import { WalletSummary, buildTweetText } from './components/WalletSummary';
+import { WalletSummary, buildTweetText, buildChallengeTweet } from './components/WalletSummary';
 import { DripScore } from './components/DripScore';
 import { SecurityPanel } from './components/SecurityPanel';
 import { PortfolioChart } from './components/PortfolioChart';
@@ -148,28 +148,27 @@ export default function App() {
     const text = buildTweetText(
       result.address, result.score, result.tier,
       result.portfolioUSD, result.nftCount, result.txnCount, result.activeChains.length,
-      result.activeChains
+      result.activeChains,
+      result.gasSpentUSD,
+      result.walletAgeDays,
+      result.hasMemecoin,
+      result.portfolioDelta7d,
     );
-    const url = window.location.href;
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
       '_blank', 'noopener,noreferrer'
     );
   }
 
   function handleChallenge() {
     if (!result) return;
-    const personalityLabel = classify(result);
-    const text = [
-      `my blockchain drip score is ${result.score}/100`,
-      `i'm a ${personalityLabel} — ${result.tier.toUpperCase()} tier`,
-      ``,
-      `what does your wallet say about you?`,
-      `powered by goldrush.dev`,
-    ].join('\n');
-    const url = `${window.location.origin}${window.location.pathname}?address=${result.address}`;
+    const text = buildChallengeTweet(
+      result.address, result.score, result.tier,
+      result.portfolioUSD, result.txnCount, result.activeChains.length,
+      classify(result),
+    );
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
       '_blank', 'noopener'
     );
   }
