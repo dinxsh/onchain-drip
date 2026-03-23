@@ -4,13 +4,15 @@ export function calcDripScore(
   portfolioUSD: number,
   chains: number,
   txnCount: number,
-  nftCount: number
+  nftCount: number,
+  securityScore = 80
 ): number {
   const portfolioPoints = Math.min(Math.log10(Math.max(portfolioUSD, 1)) * 15, 40);
   const chainPoints     = Math.min(chains * 6, 30);
   const txnPoints       = Math.min(Math.log10(Math.max(txnCount, 1)) * 10, 20);
   const nftPoints       = Math.min(nftCount * 0.15, 10);
-  return Math.round(Math.min(portfolioPoints + chainPoints + txnPoints + nftPoints, 100));
+  const secBonus        = Math.round(securityScore * 0.1); // max +10
+  return Math.round(Math.min(portfolioPoints + chainPoints + txnPoints + nftPoints + secBonus, 100));
 }
 
 export function getTier(score: number): Tier {

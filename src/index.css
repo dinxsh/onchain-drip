@@ -124,3 +124,27 @@
   border-radius: 0;
   line-height: 1;
 }
+
+/* ─── Live event slide-in ────────────────────────────────────── */
+@keyframes slide-in {
+  from { transform: translateY(-10px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.slide-in { animation: slide-in 0.2s ease-out; }
+
+/* ─── Pulsing green dot ──────────────────────────────────────── */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: #00E87A;
+  border-radius: 50%;
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Tab active / inactive ──────────────────────────────────── */
+.tab-active { border-bottom: 2px solid #FF4C8B !important; color: #FF4C8B !important; }
+.tab-inactive { border-bottom: 2px solid transparent !important; color: #404040 !important; }

@@ -1,4 +1,5 @@
 import { Tier, TIER_COLOR } from '../lib/score';
+import { generateRoast as generateRoastFromEngine, RoastContext } from '../lib/roast-engine';
 
 export type Props = {
   address: string;
@@ -9,6 +10,16 @@ export type Props = {
   tier: Tier;
   score: number;
   errors: string[];
+  // Extended context for richer roasts (optional, falls back to basic)
+  walletAgeDays?: number;
+  portfolioDelta7d?: number;
+  unlimitedApprovals?: number;
+  highRiskApprovals?: number;
+  topTokenSymbols?: string[];
+  hasMemecoin?: boolean;
+  largestTxnUSD?: number;
+  gasSpentUSD?: number;
+  securityScore?: number;
 };
 
 type Label = { text: string; color: string };
@@ -360,7 +371,26 @@ export function buildTweetText(
   chainCount: number,
   activeChains: string[]
 ): string {
-  const roast    = generateRoast(portfolioUSD, nftCount, txnCount, chainCount, activeChains, tier, score);
+  const roastCtx: RoastContext = {
+    address,
+    portfolioUSD,
+    portfolioDelta7d: 0,
+    nftCount,
+    chainCount,
+    activeChains,
+    txnCount,
+    walletAgeDays: 365,
+    unlimitedApprovals: 0,
+    highRiskApprovals: 0,
+    topTokenSymbols: [],
+    hasMemecoin: false,
+    largestTxnUSD: 0,
+    gasSpentUSD: 0,
+    dripScore: score,
+    tier,
+    securityScore: 80,
+  };
+  const roast = generateRoastFromEngine(roastCtx);
   const labels   = getActivityLabels(portfolioUSD, nftCount, txnCount, chainCount, score);
   const labelStr = labels.slice(0, 3).map(l => l.text).join(' / ');
   const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -384,10 +414,41 @@ export function buildTweetText(
 // ─── Component ──────────────────────────────────────────────────
 
 export function WalletSummary({
-  portfolioUSD, nftCount, txnCount, activeChains, tier, score, errors
+  address,
+  portfolioUSD, nftCount, txnCount, activeChains, tier, score, errors,
+  walletAgeDays = 365,
+  portfolioDelta7d = 0,
+  unlimitedApprovals = 0,
+  highRiskApprovals = 0,
+  topTokenSymbols = [],
+  hasMemecoin = false,
+  largestTxnUSD = 0,
+  gasSpentUSD = 0,
+  securityScore = 80,
 }: Props) {
   const labels  = getActivityLabels(portfolioUSD, nftCount, txnCount, activeChains.length, score);
-  const roast   = generateRoast(portfolioUSD, nftCount, txnCount, activeChains.length, activeChains, tier, score);
+
+  // Build RoastContext and use roast-engine for richer output
+  const roastCtx: RoastContext = {
+    address: address ?? '0x0000000000000000000000000000000000000000',
+    portfolioUSD,
+    portfolioDelta7d,
+    nftCount,
+    chainCount: activeChains.length,
+    activeChains,
+    txnCount,
+    walletAgeDays,
+    unlimitedApprovals,
+    highRiskApprovals,
+    topTokenSymbols,
+    hasMemecoin,
+    largestTxnUSD,
+    gasSpentUSD,
+    dripScore: score,
+    tier,
+    securityScore,
+  };
+  const roast   = generateRoastFromEngine(roastCtx);
   const color   = TIER_COLOR[tier];
 
   return (
